@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+<style>
+body {
+  overflow: hidden
+}
+#title{
+  position: absolute;
+  top: 1%;
+}
+#info {
+  position: absolute;
+  top: 3%;
+  width: 100%; 
+  padding: 10px;
+  text-align: center;
+  color: #ffff00
+}
+
+</style>
+</head>
+
+<body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/88/three.min.js"></script>
+<script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
+<script src="https://jyunming-chen.github.io/tutsplus/js/KeyboardState.js"></script>
+<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+<script src="https://rawgit.com/mrdoob/three.js/master/examples/js/loaders/MTLLoader.js"></script>
+<script src="https://rawgit.com/mrdoob/three.js/master/examples/js/loaders/OBJLoader.js"></script>
+<script>
+
+var renderer, camera, controls, scene;
+var keyboard = new KeyboardState();
+var light,train;
+var railway,railway2,railway3,railway4;
+var line,geometry,t = 0,f = 0;
+var theta = Math.PI/2,R = 40;
+var texture,texture2;
+
+init();
+animate();
+
+function Matrix4Update(newPos, newDir) {
+	var localX = newDir.clone().normalize();
+  var localY = new THREE.Vector3 (0,1,0);
+  var projectionY_X = localY.clone().projectOnVector(localX); //so重要
+  localY.sub(projectionY_X).normalize(); //so重要
+  var localZ = new THREE.Vector3();
+  localZ.crossVectors (localX, localY);
+  train.matrix.makeBasis (localX, localY, localZ);
+  train.matrix.setPosition (newPos);
+  train.matrixAutoUpdate = false;
+}
+
+function init() {
+	renderer = new THREE.WebGLRenderer();
+	renderer.setSize(window.innerWidth, window.innerHeight);
+	renderer.setClearColor(0x888888);
+	document.body.appendChild(renderer.domElement);
+	camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 1000);
+	camera.position.set( 0, 150, 80);
+	controls = new THREE.OrbitControls(camera, renderer.domElement);
+	scene = new THREE.Scene();
+	//////////////////////////////////////////////////////////////////////////////////////////   
+	var gridXZ = new THREE.GridHelper(200, 20, 'red', 'white');
+	scene.add(gridXZ);
+	////////////////////////////////////////////////////////////////////////////////////////// 
+	light = new THREE.HemisphereLight( 0xffffff, 0x080820, 1 );
+	scene.add( light );
+	//////////////////////////////////////////////////////////////////////////////////////////  
+	var onProgress = function(xhr) {
+	if (xhr.lengthComputable) {
+	  var percentComplete = xhr.loaded / xhr.total * 100;
+	  console.log(Math.round(percentComplete, 2) + '% downloaded');
+	}
+	};
+
+	var onError = function(xhr) {};
+
+	//THREE.Loader.Handlers.add(/\.dds$/i, new THREE.DDSLoader());
+
+	var mtlLoader = new THREE.MTLLoader();
+	mtlLoader.setPath('Model/');
+	mtlLoader.load('materials.mtl', function(materials) {
+
+	materials.preload();
+
+	var objLoader = new THREE.OBJLoader();
+	objLoader.setMaterials(materials);
+	objLoader.setPath('Model/');
+	objLoader.load('model.obj', function(object) {
+			train =  unitize (object, 45);
+			train.visible = true;
+			train.position.set(0,0,-40);
+			scene.add (train);
+			//////// MATERIAL ADJUSTMENT for porsche ///////////////
+			// transparent window: double-side fix
+			object.traverse (
+				function(mesh) {
+					if (mesh instanceof THREE.Mesh) {
+						mesh.material.side = THREE.DoubleSide;
+					}
+				});
+	}, onProgress, onError);
+	});	
+	
+	texture = new THREE.TextureLoader().load('https://i.imgur.com/r6Hr9AV.png');
+	texture.repeat.set(7,1);
+	texture.wrapS = THREE.RepeatWrapping;
+	texture.wrapT = THREE.RepeatWrapping;
+	
+	texture2 = new THREE.TextureLoader().load('https://i.imgur.com/SxrmA5o.png');
+	texture2.repeat.set(7,7);
+	texture2.wrapS = THREE.RepeatWrapping;
+	texture2.wrapT = THREE.RepeatWrapping;
+	
+	
+	railway = new THREE.Mesh( new THREE.PlaneGeometry( 140, 20, 32 ), new THREE.MeshBasicMaterial({
+			map: texture,
+			side: THREE.DoubleSide
+		  }));
+	railway.rotation.x = Math.PI/2;
+	railway.position.set(0,0,-40);
+	railway2 = new THREE.Mesh( new THREE.RingGeometry( 30, 50, 32, 32, 0, Math.PI), new THREE.MeshBasicMaterial({
+			map: texture2,
+			side: THREE.DoubleSide
+		  }));
+	railway2.rotation.x = Math.PI/2;
+	railway2.rotation.z = Math.PI/2;
+	railway2.position.set(-70,0,0);
+	railway3 = new THREE.Mesh( new THREE.PlaneGeometry( 140, 20), new THREE.MeshBasicMaterial({
+			map: texture,
+			side: THREE.DoubleSide
+		  }));
+	railway3.rotation.x = Math.PI/2;
+	railway3.position.set(0,0,40);
+	railway4 = new THREE.Mesh( new THREE.RingGeometry( 30, 50, 32, 32, 0, Math.PI), new THREE.MeshBasicMaterial({
+			map: texture2,
+			side: THREE.DoubleSide
+		  }));
+	railway4.rotation.x = Math.PI/2;
+	railway4.rotation.z = -Math.PI/2;
+	railway4.position.set(70,0,0);
+	scene.add(railway,railway2,railway3,railway4);
+
+	window.addEventListener('resize', onWindowResize, false);
+}
+
+function animate() {
+
+	controls.update();
+	keyboard.update();
+
+	if(train != undefined){
+		if(train.position.z === -40)train.rotation.y = Math.PI/2;
+		else if(train.position.z === 40)train.rotation.y = -Math.PI/2;
+		
+		if(train.position.x > -70.5 && train.position.z === -40){
+			train.position.x -= 0.5;
+		}
+		else if(train.position.x < -70){
+			if(theta < Math.PI*1.5)theta += Math.PI/180;
+ 
+			var newPos = new THREE.Vector3 (R*Math.cos(theta)-70, 0, -R*Math.sin(theta));
+			var newDir = new THREE.Vector3 (-R*Math.sin(theta - Math.PI/2), 0, -R*Math.cos(theta - Math.PI/2));
+			Matrix4Update(newPos, newDir);
+			if(theta >= Math.PI*1.5){
+				train.matrixAutoUpdate = true; 
+				train.position.set(-70,0,40);
+			} 
+		}
+		else if(train.position.x >= -70 && train.position.z === 40 && train.position.x < 70){
+			train.position.x += 0.5;
+		}
+		else if(train.position.x >= 70 && train.position.z === 40){
+			if(theta < Math.PI*2.5)theta += Math.PI/180;
+ 
+			var newPos = new THREE.Vector3 (R*Math.cos(theta)+70, 0, -R*Math.sin(theta));
+			var newDir = new THREE.Vector3 (-R*Math.sin(theta - Math.PI/2), 0, -R*Math.cos(theta - Math.PI/2));
+			Matrix4Update(newPos, newDir);
+			if(theta >= Math.PI*2.5){
+				train.matrixAutoUpdate = true; 
+				train.position.set(70,0,-40);
+				theta = Math.PI/2;
+			} 
+		}
+	}
+	texture.needsUpdate = true;
+	requestAnimationFrame(animate);
+	renderer.render(scene, camera);  
+}
+
+function unitize (object, targetSize) {  
+	
+	// find bounding box of 'object'
+	var box3 = new THREE.Box3();
+	box3.setFromObject (object);
+	var size = new THREE.Vector3();
+	size.subVectors (box3.max, box3.min);
+	var center = new THREE.Vector3();
+	center.addVectors(box3.max, box3.min).multiplyScalar (0.5);
+	console.log ('center: ' + center.x + ', '+center.y + ', '+center.z );
+	console.log ('size: ' + size.x + ', ' +  size.y + ', '+size.z );
+	// uniform scaling according to objSize
+	var objSize = findMax (size);
+	var scaleSet = targetSize/objSize;	
+	var theObject =  new THREE.Object3D();
+	theObject.add (object);
+	object.scale.set (scaleSet, scaleSet, scaleSet);
+	object.position.set (-center.x*scaleSet, -center.y*scaleSet + size.y/2*scaleSet, -center.z*scaleSet);
+	return theObject;
+	// helper function
+	function findMax(v) {
+		if (v.x > v.y) {
+			return v.x > v.z ? v.x : v.z;
+		} else { // v.y > v.x
+			return v.y > v.z ? v.y : v.z;
+		} 
+	}	
+}
+
+function onWindowResize() {
+
+  var width = window.innerWidth;
+  var height = window.innerHeight;
+  camera.aspect = width / height;
+  camera.updateProjectionMatrix();
+  renderer.setSize(width, height);
+}
+
+
+</script>
+</body>
+
+</html>
