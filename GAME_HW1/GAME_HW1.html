@@ -94,7 +94,7 @@ function init() {
 	objLoader.load('model.obj', function(object) {
 			train =  unitize (object, 45);
 			train.visible = true;
-			train.position.set(0,0,-40);
+			train.position.set(0,0.5,-40);
 			scene.add (train);
 			//////// MATERIAL ADJUSTMENT for porsche ///////////////
 			// transparent window: double-side fix
@@ -123,27 +123,27 @@ function init() {
 			side: THREE.DoubleSide
 		  }));
 	railway.rotation.x = Math.PI/2;
-	railway.position.set(0,0,-40);
+	railway.position.set(0,0.5,-40);
 	railway2 = new THREE.Mesh( new THREE.RingGeometry( 30, 50, 32, 32, 0, Math.PI), new THREE.MeshBasicMaterial({
 			map: texture2,
 			side: THREE.DoubleSide
 		  }));
 	railway2.rotation.x = Math.PI/2;
 	railway2.rotation.z = Math.PI/2;
-	railway2.position.set(-70,0,0);
+	railway2.position.set(-70,0.5,0);
 	railway3 = new THREE.Mesh( new THREE.PlaneGeometry( 140, 20), new THREE.MeshBasicMaterial({
 			map: texture,
 			side: THREE.DoubleSide
 		  }));
 	railway3.rotation.x = Math.PI/2;
-	railway3.position.set(0,0,40);
+	railway3.position.set(0,0.5,40);
 	railway4 = new THREE.Mesh( new THREE.RingGeometry( 30, 50, 32, 32, 0, Math.PI), new THREE.MeshBasicMaterial({
 			map: texture2,
 			side: THREE.DoubleSide
 		  }));
 	railway4.rotation.x = Math.PI/2;
 	railway4.rotation.z = -Math.PI/2;
-	railway4.position.set(70,0,0);
+	railway4.position.set(70,0.5,0);
 	scene.add(railway,railway2,railway3,railway4);
 
 	window.addEventListener('resize', onWindowResize, false);
@@ -164,12 +164,12 @@ function animate() {
 		else if(train.position.x < -70){
 			if(theta < Math.PI*1.5)theta += Math.PI/180;
  
-			var newPos = new THREE.Vector3 (R*Math.cos(theta)-70, 0, -R*Math.sin(theta));
-			var newDir = new THREE.Vector3 (-R*Math.sin(theta - Math.PI/2), 0, -R*Math.cos(theta - Math.PI/2));
+			var newPos = new THREE.Vector3 (R*Math.cos(theta)-70, 0.5, -R*Math.sin(theta));
+			var newDir = new THREE.Vector3 (-R*Math.sin(theta - Math.PI/2), 0.5, -R*Math.cos(theta - Math.PI/2));
 			Matrix4Update(newPos, newDir);
 			if(theta >= Math.PI*1.5){
 				train.matrixAutoUpdate = true; 
-				train.position.set(-70,0,40);
+				train.position.set(-70,0.5,40);
 			} 
 		}
 		else if(train.position.x >= -70 && train.position.z === 40 && train.position.x < 70){
@@ -178,12 +178,12 @@ function animate() {
 		else if(train.position.x >= 70 && train.position.z === 40){
 			if(theta < Math.PI*2.5)theta += Math.PI/180;
  
-			var newPos = new THREE.Vector3 (R*Math.cos(theta)+70, 0, -R*Math.sin(theta));
-			var newDir = new THREE.Vector3 (-R*Math.sin(theta - Math.PI/2), 0, -R*Math.cos(theta - Math.PI/2));
+			var newPos = new THREE.Vector3 (R*Math.cos(theta)+70, 0.5, -R*Math.sin(theta));
+			var newDir = new THREE.Vector3 (-R*Math.sin(theta - Math.PI/2), 0.5, -R*Math.cos(theta - Math.PI/2));
 			Matrix4Update(newPos, newDir);
 			if(theta >= Math.PI*2.5){
 				train.matrixAutoUpdate = true; 
-				train.position.set(70,0,-40);
+				train.position.set(70,0.5,-40);
 				theta = Math.PI/2;
 			} 
 		}
