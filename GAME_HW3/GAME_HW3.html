@@ -194,13 +194,15 @@ function init() {
   camera.position.y = 300;
 	camera.position.z = 250;
 
-  light = new THREE.PointLight(0xdddddd);
-  light.position.set(100, 300, 200);
+  light = new THREE.PointLight(0xffffff , 0.65);
+  light.position.set(100, 1000, 200);
   scene.add(light);
+  amblight = new THREE.AmbientLight( 0x404040 ); // soft white light
+  scene.add( amblight );
 
   var gridXZ = new THREE.GridHelper(200, 20, 'red', 'white');
   //scene.add(gridXZ);
-  var floor = new THREE.Mesh (new THREE.PlaneGeometry (200,200), new THREE.MeshPhongMaterial({color:0xffffff}))
+  var floor = new THREE.Mesh (new THREE.PlaneGeometry (200,200), new THREE.MeshPhongMaterial({color:0xffffff,side: THREE.DoubleSide}))
   floor.rotation.x = -Math.PI/2
   scene.add (floor)
 
@@ -237,68 +239,92 @@ function init() {
 	ball.vel.set (-25,0,40)
 	ball.pos.set (12,3,-44)
 	balls.push (ball)
+	
+	color = new THREE.Color(0xffffff)
+	num = randomColor()/360
+	disk = new THREE.Mesh (new THREE.CylinderGeometry (10, 10, 6, 32), new THREE.MeshBasicMaterial() )
+	ball = new Ball (disk, 10, color.setHSL(num , 1 , 0.5))
+	ball.vel.set (25,0,40)
+	ball.pos.set (2,3,-44)
+	balls.push (ball)
+	
+	color = new THREE.Color(0xffffff)
+	num = randomColor()/360
+	disk = new THREE.Mesh (new THREE.CylinderGeometry (10, 10, 6, 32), new THREE.MeshBasicMaterial() )
+	ball = new Ball (disk, 10, color.setHSL(num , 1 , 0.5))
+	ball.vel.set (-25,0,-40)
+	ball.pos.set (32,3,-44)
+	balls.push (ball)
 
 	
 	
   let plane, wall,wallfor3,wallfor4
   planeG = new THREE.Object3D();
   
-  wall = new THREE.Mesh ( new THREE.BoxGeometry (220, 10, 10), new THREE.MeshPhongMaterial() )
+  wall = new THREE.Mesh ( new THREE.BoxGeometry (200, 40, 10), new THREE.MeshPhongMaterial({color: 0xff7f1e,opacity:0.4,transparent:true}) )
   scene.add (wall)
+  wall.position.y = 20;
   wall.position.z = 105
 	plane = new Plane (new THREE.Vector3(0,0,-5), new THREE.Vector3(0,0,-1), wall,5)
   plane.update()
   planes.push (plane)
 
-  wall = new THREE.Mesh ( new THREE.BoxGeometry (220, 10, 10), new THREE.MeshPhongMaterial() )
+  wall = new THREE.Mesh ( new THREE.BoxGeometry (200, 40, 10), new THREE.MeshPhongMaterial({color: 0xff7f1e,opacity:0.4,transparent:true}) )
   scene.add (wall)
+  wall.position.y = 20;
   wall.position.z = -105
 	plane = new Plane (new THREE.Vector3(0,0,5), new THREE.Vector3(0,0,1), wall.clone(),5)
   plane.update()
   planes.push (plane)
   
-  wall = new THREE.Mesh ( new THREE.BoxGeometry (10, 10, 220), new THREE.MeshPhongMaterial() )
+  wall = new THREE.Mesh ( new THREE.BoxGeometry (10, 40, 220), new THREE.MeshPhongMaterial({color: 0xff7f1e,opacity:0.4,transparent:true}) )
   scene.add (wall)
+  wall.position.y = 20;
   wall.position.x = 105
 	plane = new Plane (new THREE.Vector3(-5,0,0), new THREE.Vector3(-1,0,0), wall.clone(),5)
   plane.update()
   planes.push (plane)
 
-  wall = new THREE.Mesh ( new THREE.BoxGeometry (10, 10, 220), new THREE.MeshPhongMaterial() )
+  wall = new THREE.Mesh ( new THREE.BoxGeometry (10, 40, 220), new THREE.MeshPhongMaterial({color: 0xff7f1e,opacity:0.4,transparent:true}) )
   scene.add (wall)
+  wall.position.y = 20;
   wall.position.x = -105
 	plane = new Plane (new THREE.Vector3(5,0,0), new THREE.Vector3(1,0,0), wall.clone(),5)
   plane.update()
   planes.push (plane)
   ////////////////////////////////////////////////////////////////////////////////////////////
     planeG.position.x = 40;
-  wall = new THREE.Mesh ( new THREE.BoxGeometry (80, 10, 10), new THREE.MeshPhongMaterial() )
+  wall = new THREE.Mesh ( new THREE.BoxGeometry (80, 20, 10), new THREE.MeshPhongMaterial({color: 0x14f3ff}) )
   planeG.add (wall)
-  wall.position.z = 5
+  wall.position.y = 10;
+  wall.position.z = 5;
 	plane = new Plane (new THREE.Vector3(0,0,5), new THREE.Vector3(0,0,1), wall.clone(),1)
   plane.update()
   planes.push (plane)
   
-  wall = new THREE.Mesh ( new THREE.BoxGeometry (80, 10, 10), new THREE.MeshPhongMaterial() )
+  wall = new THREE.Mesh ( new THREE.BoxGeometry (80, 20, 10), new THREE.MeshPhongMaterial({color: 0x14f3ff}) )
   planeG.add (wall)
-  wall.position.z = -5
+  wall.position.y = 10;
+  wall.position.z = -5;
 	plane = new Plane (new THREE.Vector3(0,0,-5), new THREE.Vector3(0,0,-1), wall.clone(),2)
   plane.update()
   planes.push (plane)
   
-  wallfor3 = new THREE.Mesh ( new THREE.BoxGeometry (10, 10, 20), new THREE.MeshPhongMaterial() )
+  wallfor3 = new THREE.Mesh ( new THREE.BoxGeometry (10, 20, 20), new THREE.MeshPhongMaterial({color: 0x14f3ff}) )
   wallfor3.updateMatrixWorld();
   planeG.add (wallfor3)
   planeG.updateMatrixWorld();
-  wallfor3.position.x =  45
+  wallfor3.position.y = 10;
+  wallfor3.position.x =  45;
   plane = new Plane (new THREE.Vector3(5,0,0), new THREE.Vector3(1,0,0), wallfor3.clone(),3)
   plane.update(planeG.localToWorld(wallfor3.localToWorld (new THREE.Vector3(50,0,0))))
   planes.push (plane)
   
-  wallfor4 = new THREE.Mesh ( new THREE.BoxGeometry (10, 10, 20), new THREE.MeshPhongMaterial() )
+  wallfor4 = new THREE.Mesh ( new THREE.BoxGeometry (10, 20, 20), new THREE.MeshPhongMaterial({color: 0x14f3ff}) )
   wallfor4.updateMatrixWorld();
   planeG.add (wallfor4)
-  wallfor4.position.x =  -45
+  wallfor4.position.y = 10;
+  wallfor4.position.x =  -45;
   plane = new Plane (new THREE.Vector3(-5,0,0), new THREE.Vector3(-1,0,0), wallfor4.clone(),4)
   plane.update(planeG.localToWorld(wallfor4.localToWorld (new THREE.Vector3(-50,0,0))))
   planes.push (plane)
@@ -350,7 +376,7 @@ function animate() {
 	soundVal = THREE.Math.clamp (soundVal, 0, 1);
 	soundtrack.volume = soundVal;
 	
-	balls.forEach (function(b) {b.update(0.05)})
+	balls.forEach (function(b) {b.update(0.02)})
 	planes.forEach (function(a) {
 	if(a.num === 3) a.update(planeG.localToWorld(a.mesh.localToWorld (new THREE.Vector3(50,0,0))))
 	if(a.num === 4) a.update(planeG.localToWorld(a.mesh.localToWorld (new THREE.Vector3(-50,0,0))))
