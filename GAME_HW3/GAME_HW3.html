@@ -74,7 +74,7 @@ class Ball {
 			let point = this.pos.clone().sub (plane.ptOnPl)
 			if(i === planes.length-4){
 			
-				if(this.pos.x < planeG.localToWorld(plane.mesh.localToWorld (new THREE.Vector3(50,0,0))).x && this.pos.x > planeG.localToWorld(plane.mesh.localToWorld (new THREE.Vector3(-50,0,0))).x && this.pos.z >= 5){
+				if(this.pos.x < planeG.localToWorld(plane.mesh.localToWorld (new THREE.Vector3(50,0,0))).x && this.pos.x > planeG.localToWorld(plane.mesh.localToWorld (new THREE.Vector3(-50,0,0))).x && this.pos.z >= 10){
 					if ( point.dot(plane.normal) < EPS + this.radius) {
 						// position correction
 						this.pos.copy (plane.ptOnPl.clone().add (point.projectOnPlane(plane.normal)) )
@@ -87,7 +87,7 @@ class Ball {
 					}
 				}
 			}else if(i === planes.length-3){
-				if(this.pos.x < planeG.localToWorld(plane.mesh.localToWorld (new THREE.Vector3(50,0,0))).x && this.pos.x > planeG.localToWorld(plane.mesh.localToWorld (new THREE.Vector3(-50,0,0))).x && this.pos.z <= -5){
+				if(this.pos.x < planeG.localToWorld(plane.mesh.localToWorld (new THREE.Vector3(50,0,0))).x && this.pos.x > planeG.localToWorld(plane.mesh.localToWorld (new THREE.Vector3(-50,0,0))).x && this.pos.z <= -10){
 					if ( point.dot(plane.normal) < EPS + this.radius) {
 						// position correction
 						this.pos.copy (plane.ptOnPl.clone().add (point.projectOnPlane(plane.normal)) )
@@ -220,7 +220,7 @@ function init() {
 	color = new THREE.Color(0xffffff)
 	num = randomColor()/360
 	ball = new Ball (disk, 10, color.setHSL(num , 1 , 0.5))
-	ball.vel.set (-15,0,-50)
+	ball.vel.set (-35,0,-50)
 	ball.pos.set (-60,3,20)
 	balls.push (ball)
 	
@@ -236,7 +236,7 @@ function init() {
 	num = randomColor()/360
 	disk = new THREE.Mesh (new THREE.CylinderGeometry (10, 10, 6, 32), new THREE.MeshBasicMaterial() )
 	ball = new Ball (disk, 10, color.setHSL(num , 1 , 0.5))
-	ball.vel.set (-25,0,40)
+	ball.vel.set (-45,0,40)
 	ball.pos.set (12,3,-44)
 	balls.push (ball)
 	
