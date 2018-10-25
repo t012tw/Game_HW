@@ -101,7 +101,7 @@ class Ball {
 				}
 			}else if(i === planes.length-2){
 			//console.log(planeG.localToWorld(new THREE.Vector3(50,0,0)).x)
-				if(this.pos.z < planeG.localToWorld(plane.mesh.localToWorld (new THREE.Vector3(0,0,10))).z && this.pos.z > planeG.localToWorld(plane.mesh.localToWorld (new THREE.Vector3(0,0,-10))).z && this.pos.x >= 5 && this.pos.x - planeG.localToWorld(new THREE.Vector3(50,0,0)).x < 0.5){
+				if(this.pos.z < planeG.localToWorld(plane.mesh.localToWorld (new THREE.Vector3(0,0,10))).z && this.pos.z > planeG.localToWorld(plane.mesh.localToWorld (new THREE.Vector3(0,0,-10))).z && this.pos.x >= 5 && this.pos.x - planeG.localToWorld(new THREE.Vector3(50,0,0)).x <= 5){
 					if ( point.dot(plane.normal) < EPS + this.radius) {
 						// position correction
 						this.pos.add (plane.normal.clone().multiplyScalar(this.radius))
@@ -114,7 +114,7 @@ class Ball {
 				}
 			}else if(i === planes.length-1){
 			//console.log(planeG.localToWorld(plane.mesh.localToWorld (new THREE.Vector3(1,0,0))).x)
-				if(this.pos.z < planeG.localToWorld(plane.mesh.localToWorld (new THREE.Vector3(0,0,10))).z && this.pos.z > planeG.localToWorld(plane.mesh.localToWorld (new THREE.Vector3(0,0,-10))).z && this.pos.x <= -5&& planeG.localToWorld(new THREE.Vector3(-50,0,0)).x - this.pos.x < 0.5){
+				if(this.pos.z < planeG.localToWorld(plane.mesh.localToWorld (new THREE.Vector3(0,0,10))).z && this.pos.z > planeG.localToWorld(plane.mesh.localToWorld (new THREE.Vector3(0,0,-10))).z && this.pos.x <= -5&& planeG.localToWorld(new THREE.Vector3(-50,0,0)).x - this.pos.x <= 5){
 					if ( point.dot(plane.normal) < EPS + this.radius) {
 						// position correction
 						this.pos.add (plane.normal.clone().multiplyScalar(this.radius))
@@ -376,7 +376,7 @@ function animate() {
 	soundVal = THREE.Math.clamp (soundVal, 0, 1);
 	soundtrack.volume = soundVal;
 	
-	balls.forEach (function(b) {b.update(0.02)})
+	balls.forEach (function(b) {b.update(0.03)})
 	planes.forEach (function(a) {
 	if(a.num === 3) a.update(planeG.localToWorld(a.mesh.localToWorld (new THREE.Vector3(50,0,0))))
 	if(a.num === 4) a.update(planeG.localToWorld(a.mesh.localToWorld (new THREE.Vector3(-50,0,0))))
