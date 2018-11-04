@@ -12,7 +12,6 @@
 	  font-family: Monospace;
 	  font-size: 20px;
 	}
-	
 	#info {
 	  position: absolute;
 	  top: 0px;
@@ -21,26 +20,6 @@
 	  text-align: center;
 	  color: #ffff00
 	}
-	
-	a {
-	  color: #00ffff
-	}
-	
-	strong {
-	  color: red
-	}
-	
-	#container {
-	  z-index: 0;
-	  left: 0px;
-	  top: 0px;
-	  overflow: hidden;
-	  position: absolute;
-	  width: 100%;
-	  height: 100%;
-	}
-
-
 </style>
 </head>
 
@@ -52,7 +31,12 @@
 <script src="https://jyunming-chen.github.io/tutsplus/js/KeyboardState.js"></script>
 <script src="loadJSON.js"></script>
 <script src="Gyroscope.js"></script>
-
+<div id = "info"> 
+	<br>Press "S" to dance , "C" to switch camera<br><br>
+</div>
+<audio id="soundtrack" autoplay loop style="display:none">
+<source src="sounds/You Make My Dreams.wav" type='audio/wav'>
+</audio>
 
 <script>
 var scene, renderer, camera;
@@ -65,6 +49,8 @@ var clock = new THREE.Clock();
 var ts = clock.getElapsedTime()
 var intKey =[];
 var change = false,cam = false;
+var soundTrack;
+var soundVal = 1.0, sign = 1.0;
 
 var gcontrols = {
 	RsZ: 0.01,  // s for shoulder
@@ -348,6 +334,8 @@ function init() {
   gui.add (gcontrols, 'UbX', -0.8, 0.8);
   gui.add (gcontrols, 'UbY', -0.6 ,0.6);
   gui.add (gcontrols, 'posY', -20, 20);
+  /////////////////////////////////////////////////////////////////
+  soundTrack = document.getElementById ('soundtrack');
 }
 
 function keyframe(t) {
@@ -363,29 +351,29 @@ function keyframe(t) {
 	console.log (a)
 
 	intKey = [
-	keys[ii][1].RsZ * (1 - a) + keys[ii + 1][1].RsZ * a,
-	keys[ii][1].RsX * (1 - a) + keys[ii + 1][1].RsX * a,
-	keys[ii][1].RsY * (1 - a) + keys[ii + 1][1].RsY * a,
-	keys[ii][1].ReX * (1 - a) + keys[ii + 1][1].ReX * a,
-	keys[ii][1].LsZ * (1 - a) + keys[ii + 1][1].LsZ * a,
-	keys[ii][1].LsX * (1 - a) + keys[ii + 1][1].LsX * a,
-	keys[ii][1].LsY * (1 - a) + keys[ii + 1][1].LsY * a,
-	keys[ii][1].LeX * (1 - a) + keys[ii + 1][1].LeX * a,
-	keys[ii][1].HsZ * (1 - a) + keys[ii + 1][1].HsZ * a,
-	keys[ii][1].HsX * (1 - a) + keys[ii + 1][1].HsX * a,
-	keys[ii][1].HsY * (1 - a) + keys[ii + 1][1].HsY * a,
-	keys[ii][1].RhZ * (1 - a) + keys[ii + 1][1].RhZ * a,
-	keys[ii][1].RhX * (1 - a) + keys[ii + 1][1].RhX * a,
-	keys[ii][1].RhY * (1 - a) + keys[ii + 1][1].RhY * a,
-	keys[ii][1].RkY * (1 - a) + keys[ii + 1][1].RkY * a,
-	keys[ii][1].LhZ * (1 - a) + keys[ii + 1][1].LhZ * a,
-	keys[ii][1].LhX * (1 - a) + keys[ii + 1][1].LhX * a,
-	keys[ii][1].LhY * (1 - a) + keys[ii + 1][1].LhY * a,
-	keys[ii][1].LkY * (1 - a) + keys[ii + 1][1].LkY * a,
-	keys[ii][1].UbZ * (1 - a) + keys[ii + 1][1].UbZ * a,
-	keys[ii][1].UbX * (1 - a) + keys[ii + 1][1].UbX * a,
-	keys[ii][1].UbY * (1 - a) + keys[ii + 1][1].UbY * a,
-	keys[ii][1].posY * (1 - a) + keys[ii + 1][1].posY * a
+		keys[ii][1].RsZ * (1 - a) + keys[ii + 1][1].RsZ * a,
+		keys[ii][1].RsX * (1 - a) + keys[ii + 1][1].RsX * a,
+		keys[ii][1].RsY * (1 - a) + keys[ii + 1][1].RsY * a,
+		keys[ii][1].ReX * (1 - a) + keys[ii + 1][1].ReX * a,
+		keys[ii][1].LsZ * (1 - a) + keys[ii + 1][1].LsZ * a,
+		keys[ii][1].LsX * (1 - a) + keys[ii + 1][1].LsX * a,
+		keys[ii][1].LsY * (1 - a) + keys[ii + 1][1].LsY * a,
+		keys[ii][1].LeX * (1 - a) + keys[ii + 1][1].LeX * a,
+		keys[ii][1].HsZ * (1 - a) + keys[ii + 1][1].HsZ * a,
+		keys[ii][1].HsX * (1 - a) + keys[ii + 1][1].HsX * a,
+		keys[ii][1].HsY * (1 - a) + keys[ii + 1][1].HsY * a,
+		keys[ii][1].RhZ * (1 - a) + keys[ii + 1][1].RhZ * a,
+		keys[ii][1].RhX * (1 - a) + keys[ii + 1][1].RhX * a,
+		keys[ii][1].RhY * (1 - a) + keys[ii + 1][1].RhY * a,
+		keys[ii][1].RkY * (1 - a) + keys[ii + 1][1].RkY * a,
+		keys[ii][1].LhZ * (1 - a) + keys[ii + 1][1].LhZ * a,
+		keys[ii][1].LhX * (1 - a) + keys[ii + 1][1].LhX * a,
+		keys[ii][1].LhY * (1 - a) + keys[ii + 1][1].LhY * a,
+		keys[ii][1].LkY * (1 - a) + keys[ii + 1][1].LkY * a,
+		keys[ii][1].UbZ * (1 - a) + keys[ii + 1][1].UbZ * a,
+		keys[ii][1].UbX * (1 - a) + keys[ii + 1][1].UbX * a,
+		keys[ii][1].UbY * (1 - a) + keys[ii + 1][1].UbY * a,
+		keys[ii][1].posY * (1 - a) + keys[ii + 1][1].posY * a
 	];
 
 }
@@ -394,14 +382,22 @@ function animate() {
   keyboard.update();
   camera1.lookAt(new THREE.Vector3(0, 50, 0));
   
-  if ( keyboard.pressed("S") ) change = !change;
-  if(change) keyframe (clock.getElapsedTime());
+  soundVal += sign*0.01;
+  soundVal = THREE.Math.clamp (soundVal, 0, 1);
+  soundtrack.volume = soundVal;
   
-  if ( keyboard.pressed("C") ) cam = !cam;
-  if(cam) renderer.render(scene, camera1);
-  else {
-	renderer.render(scene, camera);
+  if ( keyboard.pressed("S") ) change = !change; //start dance
+  if(change) {
+	keyframe (clock.getElapsedTime());
+	soundTrack.play()
+  }else{
+	soundTrack.pause()
   }
+  
+  if ( keyboard.pressed("C") ) cam = !cam;  //change camera
+  if(cam) renderer.render(scene, camera1);
+  else renderer.render(scene, camera);
+  
   requestAnimationFrame(animate);
   update();
 }

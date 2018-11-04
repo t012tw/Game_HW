@@ -513,7 +513,7 @@ function loadJSON(){
 			  }
 			}
 		  },
-		  "preset": "pose9",
+		  "preset": "Default",
 		  "closed": false,
 		  "folders": {}
 	}
