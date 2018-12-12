@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>GAME_HW6 - MD2 controls</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				color: #000;
+				font-family:Monospace;
+				font-size:13px;
+				text-align:center;
+				font-weight: bold;
+
+				background-color: #fff;
+				margin: 0px;
+				overflow: hidden;
+			}
+
+			#info {
+				position: absolute;
+				padding: 10px;
+				width: 100%;
+				text-align: center;
+				color: #000;
+			}
+
+			a { color: skyblue; }
+		</style>
+	</head>
+
+	<body>
+		
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/88/three.min.js"></script>
+<script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
+<script src="https://rawgit.com/banksean/304522/raw/8f481c980fe34e6930d44c61c59d7851f4235a3c/perlin-noise-simplex.js"></script>
+<script src="https://rawgit.com/mrdoob/three.js/master/examples/js/loaders/MTLLoader.js"></script>
+<script src="https://rawgit.com/mrdoob/three.js/master/examples/js/loaders/OBJLoader.js"></script>
+		<script src='js/MD2Loader.js'></script>
+		<script src='js/MorphBlendMesh.js'></script>
+		<script src='js/MD2CharacterComplex_forHW6.js'></script>
+		<script src='js/Gyroscope.js'></script>
+<!--
+		<script src='js/Detector.js'></script>
+		<script src='js/libs/stats.min.js'></script>
+-->
+		<script>
+
+		//	if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
+
+			var SCREEN_WIDTH = window.innerWidth;
+			var SCREEN_HEIGHT = window.innerHeight;
+
+			var container, stats;
+			var camera, scene, renderer;
+
+			var characters = [];
+			var nCharacters = 0;
+
+			var cameraControls;
+
+			var controls = {
+
+				moveForward: false,
+				moveBackward: false,
+				moveLeft: false,
+				moveRight: false
+
+			};
+
+			var clock = new THREE.Clock();
+			var snoise = new SimplexNoise();//For 離散地形
+			var treasure1, treasure2;
+			init();
+			animate();
+
+			function init() {
+
+				container = document.createElement( 'div' );
+				document.body.appendChild( container );
+
+				// CAMERA
+
+				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 4000 );
+				camera.position.set( 0, 150, 1300 );
+
+				// SCENE
+
+				scene = new THREE.Scene();
+				scene.background = new THREE.Color( 0xffffff );
+				scene.fog = new THREE.Fog( 0x444444, 1500, 6000 );//霧
+
+				scene.add( camera );
+
+				// LIGHTS
+
+				scene.add( new THREE.AmbientLight( 0x222222 ) );
+
+				var light = new THREE.DirectionalLight( 0xffffff, 2.25 );
+				light.position.set( 200, 450, 500 );
+
+				light.castShadow = true;
+
+				light.shadow.mapSize.width = 1024;
+				light.shadow.mapSize.height = 512;
+
+				light.shadow.camera.near = 100;
+				light.shadow.camera.far = 1200;
+
+				light.shadow.camera.left = -1000;
+				light.shadow.camera.right = 1000;
+				light.shadow.camera.top = 350;
+				light.shadow.camera.bottom = -350;
+
+				scene.add( light );
+				// scene.add( new THREE.CameraHelper( light.shadow.camera ) );
+
+
+				//  GROUND
+				
+				//一般草地
+				var gt = new THREE.TextureLoader().load( "grasslight-big.jpg" );
+				var gg = new THREE.PlaneBufferGeometry( 16000, 16000 );
+				var gm = new THREE.MeshPhongMaterial( { color: 0xffffff, map: gt } );
+
+				var ground = new THREE.Mesh( gg, gm );
+				ground.rotation.x = - Math.PI / 2;
+				ground.material.map.repeat.set( 64, 64 );
+				ground.material.map.wrapS = THREE.RepeatWrapping;
+				ground.material.map.wrapT = THREE.RepeatWrapping;
+				// note that because the ground does not cast a shadow, .castShadow is left false
+				ground.receiveShadow = true;
+
+				scene.add( ground );
+				
+				//離散地形
+				/*var meshFunc = function(u0, v0) {
+					return new THREE.Vector3(-100 + 8000 * u0, 
+					//3 * Math.sin(20 * (u0 + v0)), 
+					snoise.noise(u0*3,v0*3)*200,
+					-100 + 8000 * v0);
+				};
+				//console.log(snoise.noise(0.5*3,0.5*3)*10);
+				var geometry = new THREE.ParametricGeometry(meshFunc, 20, 20);
+				// these two are not required:
+				// already done so in constructor
+				// geometry.computeFaceNormals();
+				// geometry.computeVertexNormals();
+				//https://github.com/mrdoob/three.js/blob/master/src/extras/geometries/ParametricGeometry.js#L79-L80
+
+				var material = new THREE.MeshPhongMaterial({
+				color: 0x12ff34,
+				wireframe: false,
+				side: THREE.DoubleSide,
+				});
+
+				mesh = new THREE.Mesh(geometry, material);
+				//mesh.position.set(-8000,0,-8000);
+				scene.add(mesh);*/
+				
+				//treasure
+				var onProgress = function(xhr) {
+				if (xhr.lengthComputable) {
+				  var percentComplete = xhr.loaded / xhr.total * 100;
+				  console.log(Math.round(percentComplete, 2) + '% downloaded');
+				}
+				};
+
+				var onError = function(xhr) {};
+
+				//THREE.Loader.Handlers.add(/\.dds$/i, new THREE.DDSLoader());
+
+				var mtlLoader = new THREE.MTLLoader();
+				mtlLoader.setPath('Model/');
+				mtlLoader.load('materials.mtl', function(materials) {
+
+				materials.preload();
+
+				var objLoader = new THREE.OBJLoader();
+				objLoader.setMaterials(materials);
+				objLoader.setPath('Model/');
+				objLoader.load('model.obj', function(object) {
+						treasure1 =  unitize (object, 70);
+						treasure1.visible = true;
+						treasure1.rotation.y = Math.PI;
+						treasure1.position.set(200,165,800);
+						treasure2 = treasure1.clone();
+						treasure2.position.set(-200,165,800);
+						scene.add (treasure1 , treasure2);
+						//////// MATERIAL ADJUSTMENT for porsche ///////////////
+						// transparent window: double-side fix
+						object.traverse (
+							function(mesh) {
+								if (mesh instanceof THREE.Mesh) {
+									mesh.material.side = THREE.DoubleSide;
+								}
+							});
+				}, onProgress, onError);
+				});	
+				
+				//平台
+				texture = new THREE.TextureLoader().load('https://i.imgur.com/Uqah2Wq.png');
+				texture.repeat.set(10,2);
+				texture.wrapS = THREE.RepeatWrapping;
+				texture.wrapT = THREE.RepeatWrapping;
+				let platform = new THREE.Mesh (new THREE.BoxGeometry(1000,30,200), new THREE.MeshPhongMaterial ({map: texture, side: THREE.DoubleSide, transparent:true}))
+				platform.castShadow = true;
+				platform.receiveShadow = true;
+				platform.position.set(0,15,150);
+				scene.add (platform)
+				
+				platform = new THREE.Mesh (new THREE.BoxGeometry(1000,30,200), new THREE.MeshPhongMaterial ({map: texture, side: THREE.DoubleSide, transparent:true}))
+				platform.castShadow = true;
+				platform.receiveShadow = true;
+				platform.position.set(0,45,350);
+				scene.add (platform)
+				
+				platform = new THREE.Mesh (new THREE.BoxGeometry(1000,30,200), new THREE.MeshPhongMaterial ({map: texture, side: THREE.DoubleSide, transparent:true}))
+				platform.castShadow = true;
+				platform.receiveShadow = true;
+				platform.position.set(0,75,550);
+				scene.add (platform)
+				
+				platform = new THREE.Mesh (new THREE.BoxGeometry(1000,30,200), new THREE.MeshPhongMaterial ({map: texture, side: THREE.DoubleSide, transparent:true}))
+				platform.castShadow = true;
+				platform.receiveShadow = true;
+				platform.position.set(0,150,800);
+				scene.add (platform)
+				
+				
+				
+				// RENDERER
+
+				renderer = new THREE.WebGLRenderer( { antialias: true } );
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( SCREEN_WIDTH, SCREEN_HEIGHT );
+				container.appendChild( renderer.domElement );
+
+				//
+
+				renderer.gammaInput = true;
+				renderer.gammaOutput = true;
+
+				renderer.shadowMap.enabled = true;
+				renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+				// STATS
+
+		//		stats = new Stats();
+		//		container.appendChild( stats.dom );
+
+				// EVENTS
+
+				window.addEventListener( 'resize', onWindowResize, false );
+				document.addEventListener( 'keydown', onKeyDown, false );
+				document.addEventListener( 'keyup', onKeyUp, false );
+
+				// CONTROLS
+
+				cameraControls = new THREE.OrbitControls( camera, renderer.domElement );
+				cameraControls.target.set( 0, 50, 0 );
+				cameraControls.update();
+
+				// CHARACTER
+/*
+				var configOgro = {
+
+					baseUrl: "md2models/ogro/",
+
+					body: "ogro.md2",
+					skins: [ "grok.jpg", "ogrobase.png", "arboshak.png", "ctf_r.png", "ctf_b.png", "darkam.png", "freedom.png",
+							 "gib.png", "gordogh.png", "igdosh.png", "khorne.png", "nabogro.png",
+							 "sharokh.png" ],
+					weapons:  [ [ "weapon.md2", "weapon.jpg" ] ],
+					animations: {
+						move: "run",
+						idle: "stand",
+						jump: "jump",
+						attack: "attack",
+						crouchMove: "cwalk",
+						crouchIdle: "cstand",
+						crouchAttach: "crattack"
+					},
+
+					walkSpeed: 350,
+					crouchSpeed: 175
+
+				};
+*/
+				var configOgro = {
+
+					baseUrl: "md2models/yoshi/",
+
+					body: "tris.md2",
+					skins: [ "yoshi.png" ],
+					weapons:  [  ],
+
+					animations: {
+						move: "run",
+						idle: "stand",
+						jump: "jump",
+						attack: "attack",
+						crouchMove: "cwalk",
+						crouchIdle: "cstand",
+						crouchAttach: "crattack"
+					},
+
+					walkSpeed: 350,
+					crouchSpeed: 175
+
+				};
+
+				var nRows = 1;
+				var nSkins = configOgro.skins.length;
+
+				nCharacters = nSkins * nRows;
+
+				for ( var i = 0; i < nCharacters; i ++ ) {
+
+					var character = new THREE.MD2CharacterComplex();
+					character.scale = 3;
+					character.controls = controls;
+					characters.push( character );
+
+				}
+
+				var baseCharacter = new THREE.MD2CharacterComplex();
+				baseCharacter.scale = 3;
+
+				baseCharacter.onLoadComplete = function () {
+
+					var k = 0;
+
+					for ( var j = 0; j < nRows; j ++ ) {
+
+						for ( var i = 0; i < nSkins; i ++ ) {
+
+							var cloneCharacter = characters[ k ];
+
+							cloneCharacter.shareParts( baseCharacter );
+
+							// cast and receive shadows
+							cloneCharacter.enableShadows( true );
+
+							cloneCharacter.setWeapon( 0 );
+							cloneCharacter.setSkin( i );
+
+							cloneCharacter.root.position.x = ( i - nSkins/2 ) * 150;
+							cloneCharacter.root.position.z = j * 250;
+
+							scene.add( cloneCharacter.root );
+
+							k ++;
+
+						}
+
+					}
+
+					var gyro = new THREE.Gyroscope();  //??
+					gyro.add( camera );
+					gyro.add( light, light.target );
+
+					characters[ Math.floor( nSkins / 2 ) ].root.add( gyro );
+
+				};
+
+				baseCharacter.loadParts( configOgro );
+
+			}
+			
+			//for 平台
+			var y = 0;
+			var step1 = false,step2 = false,step3 = false,step4 = false;
+			function groundLevel (x,z) {
+				//console.log(step1 , step2 , step3)
+				if (x < 500 && x > -500 && z <= 250 && z > 50 ){
+					console.log("s1")
+					y = heightY + 15 + 15;
+					step1 = true;
+					step2 = false;
+					step3 = false;
+					step4 = false;
+					return y;
+				}
+				else if ((x < 500 && x > -500 && z <= 450 && z > 250 && step1) || (x < 600 && x > -600 && z <= 450 && z > 250 && controls.jump) ){
+				console.log("s2")
+					y = heightY + 45 + 15;
+					step1 = true;
+					step2 = true;
+					step3 = false;
+					step4 = false;
+					return y;
+				}
+				else if(x < 500 && x > -500 && z <= 650 && z > 450 && step1 && step2){
+				console.log("s3")
+					y = heightY + 75 + 15;
+					step1 = true;
+					step2 = true;
+					step3 = true;
+					step4 = false;
+					return y;
+				}
+				else if((x < 500 && x > -500 && z < 900 && z > 650 && step1 && step2 && step3 && step4)||(controls.jump && x < 500 && x > -500 && z < 900 && z > 550 && step1 && step2 && step3)){
+					console.log(controls.jump)
+					y = heightY + 150 + 15;
+					step1 = true;
+					step2 = true;
+					step3 = true;
+					step4 = true;
+					return y;
+				}
+				else{
+				console.log("gr")
+					y = heightY;
+					step1 = false;
+					step2 = false;
+					step3 = false;
+					step4 = false;
+					return y;
+				}
+			}
+			//EatTreasure
+			function EatTreasure(x,y,z){
+			//console.log(y)
+				if(y == heightY + 150 + 15 && treasure1 != undefined){
+				console.log("work")
+					if(x < 250 && x > 150 && z < 850 && z > 750) treasure1.visible = false;
+					if(x < -150 && x > -250 && z < 850 && z > 750) treasure2.visible = false;
+				}
+			}
+			
+			// EVENT HANDLERS
+
+			function onWindowResize( event ) {
+
+				SCREEN_WIDTH = window.innerWidth;
+				SCREEN_HEIGHT = window.innerHeight;
+
+				renderer.setSize( SCREEN_WIDTH, SCREEN_HEIGHT );
+
+				camera.aspect = SCREEN_WIDTH/ SCREEN_HEIGHT;
+				camera.updateProjectionMatrix();
+
+			}
+
+			function onKeyDown ( event ) {
+
+				event.stopPropagation();
+
+				switch( event.keyCode ) {
+
+					case 38: /*up*/
+					case 87: /*W*/ 	controls.moveForward = true; break;
+
+					case 40: /*down*/
+					case 83: /*S*/ 	 controls.moveBackward = true; break;
+
+					case 37: /*left*/
+					case 65: /*A*/   controls.moveLeft = true; break;
+
+					case 39: /*right*/
+					case 68: /*D*/    controls.moveRight = true; break;
+
+					case 67: /*C*/     controls.crouch = true; break;
+					case 32: /*space*/ controls.jump = true; break;
+					case 17: /*ctrl*/  controls.attack = true; break;
+
+				}
+
+			}
+
+			function onKeyUp ( event ) {
+
+				event.stopPropagation();
+
+				switch( event.keyCode ) {
+
+					case 38: /*up*/
+					case 87: /*W*/ controls.moveForward = false; break;
+
+					case 40: /*down*/
+					case 83: /*S*/ 	 controls.moveBackward = false; break;
+
+					case 37: /*left*/
+					case 65: /*A*/ 	 controls.moveLeft = false; break;
+
+					case 39: /*right*/
+					case 68: /*D*/ 	  controls.moveRight = false; break;
+
+					case 67: /*C*/     controls.crouch = false; break;
+					case 32: /*space*/ controls.jump = false; break;
+					case 17: /*ctrl*/  controls.attack = false; break;
+
+				}
+
+			}
+
+			//
+
+			function animate() {
+				
+				requestAnimationFrame( animate );
+				render();
+
+		//		stats.update();
+
+			}
+
+			function render() {
+
+				var delta = clock.getDelta();
+
+				for ( var i = 0; i < nCharacters; i ++ ) {
+
+					characters[ i ].update( delta );
+
+				}
+
+				renderer.render( scene, camera );
+
+			}
+			function unitize (object, targetSize) {  
+	
+				// find bounding box of 'object'
+				var box3 = new THREE.Box3();
+				box3.setFromObject (object);
+				var size = new THREE.Vector3();
+				size.subVectors (box3.max, box3.min);
+				var center = new THREE.Vector3();
+				center.addVectors(box3.max, box3.min).multiplyScalar (0.5);
+				console.log ('center: ' + center.x + ', '+center.y + ', '+center.z );
+				console.log ('size: ' + size.x + ', ' +  size.y + ', '+size.z );
+				// uniform scaling according to objSize
+				var objSize = findMax (size);
+				var scaleSet = targetSize/objSize;	
+				var theObject =  new THREE.Object3D();
+				theObject.add (object);
+				object.scale.set (scaleSet, scaleSet, scaleSet);
+				object.position.set (-center.x*scaleSet, -center.y*scaleSet + size.y/2*scaleSet, -center.z*scaleSet);
+				return theObject;
+				// helper function
+				function findMax(v) {
+					if (v.x > v.y) {
+						return v.x > v.z ? v.x : v.z;
+					} else { // v.y > v.x
+						return v.y > v.z ? v.y : v.z;
+					} 
+				}	
+			}
+
+		</script>
+
+	</body>
+</html>
