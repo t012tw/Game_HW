@@ -37,6 +37,15 @@
 <script src="https://rawgit.com/banksean/304522/raw/8f481c980fe34e6930d44c61c59d7851f4235a3c/perlin-noise-simplex.js"></script>
 <script src="https://rawgit.com/mrdoob/three.js/master/examples/js/loaders/MTLLoader.js"></script>
 <script src="https://rawgit.com/mrdoob/three.js/master/examples/js/loaders/OBJLoader.js"></script>
+<audio id="jumpSound" style="display:none">
+<source src="sounds/Jump Effect.mp3" type='audio/mp3'>
+</audio>
+<audio id="eatSound" style="display:none">
+<source src="sounds/Mushroom Sound Effect.mp3" type='audio/mp3'>
+</audio>
+<audio id="soundtrack" autoplay loop style="display:none">
+<source src="sounds/Main Theme Overworld.mp3" type='audio/mp3'>
+</audio>
 		<script src='js/MD2Loader.js'></script>
 		<script src='js/MorphBlendMesh.js'></script>
 		<script src='js/MD2CharacterComplex_forHW6.js'></script>
@@ -72,6 +81,8 @@
 			var clock = new THREE.Clock();
 			var snoise = new SimplexNoise();//For 離散地形
 			var treasure1, treasure2;
+			var soundTrack,jumpSound,eatSound;
+			var soundVal = 1.0, sign = 1.0;
 			init();
 			animate();
 
@@ -366,7 +377,11 @@
 				};
 
 				baseCharacter.loadParts( configOgro );
-
+				
+				//sound
+				eatSound = document.getElementById ('eatSound');
+				jumpSound = document.getElementById ('jumpSound');
+				soundTrack = document.getElementById ('soundtrack');
 			}
 			
 			//for 平台
@@ -425,8 +440,14 @@
 			//console.log(y)
 				if(y == heightY + 150 + 15 && treasure1 != undefined){
 				console.log("work")
-					if(x < 250 && x > 150 && z < 850 && z > 750) treasure1.visible = false;
-					if(x < -150 && x > -250 && z < 850 && z > 750) treasure2.visible = false;
+					if(x < 250 && x > 150 && z < 850 && z > 750){
+						if(treasure1.visible)eatSound.play();
+						treasure1.visible = false;
+					}
+					if(x < -150 && x > -250 && z < 850 && z > 750){
+						if(treasure2.visible)eatSound.play();
+						treasure2.visible = false;
+					}
 				}
 			}
 			
@@ -499,10 +520,17 @@
 			//
 
 			function animate() {
+			
+				soundVal += sign*0.01;
+				soundVal = THREE.Math.clamp (soundVal, 0, 1);
+				soundtrack.volume = soundVal;
+				
+				if(controls.jump)jumpSound.play();
+				soundTrack.play();
 				
 				requestAnimationFrame( animate );
 				render();
-
+				
 		//		stats.update();
 
 			}
