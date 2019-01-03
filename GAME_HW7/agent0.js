@@ -26,8 +26,8 @@ class Agent {
 	this.size = 3;
     this.halfSize = halfSize;  // half width
     this.mesh = agentMesh (this.halfSize, 'cyan');
-    this.MAXSPEED = 250;
-    this.ARRIVAL_R = 30;
+    this.MAXSPEED = 800;
+    this.ARRIVAL_R = 5;
     
     this.score = 0;
     
@@ -59,7 +59,7 @@ class Agent {
 		let vhat = this.vel.clone().normalize();
 		let point = obs[i].center.clone().sub (this.pos) // c-p
 		let proj  = point.dot(vhat);
-		const REACH = 150
+		const REACH = 50
 		const K = 10
 		if (proj > 0 && proj < REACH) {
 			let perp = new THREE.Vector3();
@@ -82,7 +82,7 @@ class Agent {
     
     if (dst < this.ARRIVAL_R) {
       this.vel.setLength(dst)
-      const REACH_TARGET = 5;
+      const REACH_TARGET = 10;
       if (dst < REACH_TARGET) {// target reached
       	console.log ('target reached');
          this.target.setFound (this);
@@ -122,10 +122,21 @@ class Agent {
   targetInducedForce(targetPos) {
     return targetPos.clone().sub(this.pos).normalize().multiplyScalar(this.MAXSPEED).sub(this.vel)
   }
-
+  setEnrmy (otherAgent){
+	this.enemy = otherAgent;
+  }
   accumulateForce() {
     // seek
     this.force.copy(this.targetInducedForce(this.target.pos));
+	
+	//seoaratuin
+	let push = new THREE.Vector3();
+	let point = this.pos.clone().sub(this.enemy.pos);
+	let d = point.length();
+	if(d < 50){
+		push.add(point.setLength(250 / d));
+		this.force.add(push);
+	}
   }
 
 }
